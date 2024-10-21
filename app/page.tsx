@@ -7,30 +7,57 @@ import TradingViewChart from "@/components/ui/TradingViewChart"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import ReactPlayer from 'react-player'
 
 export default function CryptoSentimentAnalysis() {
   const [projectName, setProjectName] = useState("")
   const [projectSymbol, setProjectSymbol] = useState("");
-  const { messages, append, isLoading,setMessages } = useChat();
+  const [videoUrl, setVideoUrl] = useState("");
+  const { messages, append, isLoading, setMessages } = useChat();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (projectName.trim() === "") {
-      setMessages([{
-        role: "assistant",
-        content: "Please enter a valid project name.",
-        id: ""
-      }]);
-      return
+      setMessages([{ role: "assistant", content: "Please enter a valid project name.", id: "" }]);
+      return;
     }
- // Clear previous messages
- setMessages([])
+
+    // Clear previous messages
+    setMessages([]);
+
     // Send the prompt to the AI
     await append({
       role: "user",
-      content: `Provide a 2-paragraph summary of the current market positioning of ${projectName} within the crypto landscape, including references to any relevant past events.Provide a detailed sentiment analysis for ${projectName} as described in your instructions.`
-    })
-  }
+      content: `Provide a 2-paragraph summary of the current market positioning of ${projectName} within the crypto landscape, including references to any relevant past events. Provide a detailed sentiment analysis for ${projectName}.`
+    });
+
+    // After the AI generates a response, we can capture the sentiment result
+    const analysisResult = messages.find(message => message.role === "assistant");
+
+    if (analysisResult) {
+      // Call the video generation function (backend API)
+      const response = await fetch('/api/generate-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sentimentText: analysisResult.content, projectName })
+      });
+
+      const data = await response.json();
+
+      if (data.videoUrl) {
+        setVideoUrl(data.videoUrl);
+        setMessages(prevMessages => [
+          ...prevMessages,
+          { role: "assistant", content: `Watch the analysis video here:`, id: "" }
+        ]);
+      } else {
+        setMessages(prevMessages => [
+          ...prevMessages,
+          { role: "assistant", content: "Error generating video. Please try again.", id: "" }
+        ]);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-600 to-blue-600 flex items-center justify-center p-4">
@@ -81,6 +108,12 @@ export default function CryptoSentimentAnalysis() {
           <div className="flex-1">
             <TokenInfoCard projectName={projectSymbol} />
             <TradingViewChart symbol={projectSymbol} />
+            {videoUrl && (
+              <div className="mt-6">
+                <h2 className="text-lg font-medium mb-2">Sentiment Analysis Video</h2>
+                <ReactPlayer url={videoUrl} controls />
+              </div>
+            )}
           </div>
         </div>
       </div>
