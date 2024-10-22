@@ -1,140 +1,102 @@
-import { NextRequest, NextResponse } from 'next/server';
-import ffmpeg from 'fluent-ffmpeg';
-import fs from 'fs';
-import path from 'path';
-import axios, { AxiosError } from 'axios';
-import FormData from 'form-data';
+import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
+import FormData from "form-data";
 
-// Set the runtime to 'nodejs' for this route
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
+
+const GATEWAY_IP = process.env.GATEWAY_IP || "your-gateway-ip";
+
+async function generateImage(sentimentText: string): Promise<string> {
+  try {
+    console.log(`Generating image with text: ${sentimentText}`);
+    console.log(`Using Gateway IP: ${GATEWAY_IP}`);
+
+    const response = await axios.post(`https://${GATEWAY_IP}/text-to-image`, {
+      model_id: "SG161222/RealVisXL_V4.0_Lightning",
+      prompt: `take the final recomendation in ${sentimentText} and generate an image that represents it`,
+      width: 1024,
+      height: 1024,
+    });
+
+    console.log("Image generation response:", response.data);
+    const imageUrl = response.data.images[0].url;
+    return imageUrl;
+  } catch (error) {
+    console.error("Detailed error in generateImage:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error details:", error.response?.data);
+    }
+    throw error;
+  }
+}
+
+async function generateVideo(imageUrl: string): Promise<string> {
+  try {
+    console.log(`Generating video from image: ${imageUrl}`);
+
+    const formData = new FormData();
+    formData.append(
+      "model_id",
+      "stabilityai/stable-video-diffusion-img2vid-xt-1-1",
+    );
+    formData.append(
+      "image",
+      (await axios.get(imageUrl, { responseType: "stream" })).data,
+    );
+
+    const response = await axios.post(
+      `https://${GATEWAY_IP}/image-to-video`,
+      formData,
+      {
+        headers: formData.getHeaders(),
+      },
+    );
+
+    console.log("Video generation response:", response.data);
+    const videoUrl = response.data.images[0].url;
+    return videoUrl;
+  } catch (error) {
+    console.error("Detailed error in generateVideo:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error details:", error.response?.data);
+    }
+    throw error;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { sentimentText, projectName } = await req.json();
 
     if (!sentimentText || !projectName) {
-      console.error('Missing sentiment text or project name');
-      return NextResponse.json({ error: 'Missing sentiment text or project name' }, { status: 400 });
-    }
-
-    console.log('LIVEPEER_API_KEY:', process.env.LIVEPEER_API_KEY);
-
-    const videoFileName = `sentiment-${projectName}.mp4`;
-    const publicDir = path.join(process.cwd(), 'public');
-
-    // Ensure the public directory exists
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-
-    const videoPath = path.join(publicDir, videoFileName);
-
-    // Step 1: Generate video with sentiment analysis text
-    await new Promise<void>((resolve, reject) => {
-      ffmpeg()
-        .input('color=c=blue:s=1280x720:d=5') // 5-second blue screen
-        .inputFormat('lavfi')
-        .complexFilter([
-          {
-            filter: 'drawtext',
-            options: {
-              fontfile: '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', // Update this path based on your system
-              text: sentimentText,
-              fontsize: 50,
-              fontcolor: 'white',
-              x: '(w-text_w)/2',
-              y: '(h-text_h)/2',
-              box: 1,
-              boxcolor: 'black@0.5',
-            },
-          },
-        ])
-        .output(videoPath)
-        .on('end', () => {
-          console.log(`Video created successfully at ${videoPath}`);
-          resolve();
-        })
-        .on('error', (err) => {
-          console.error('FFMPEG Error:', err);
-          reject(err);
-        })
-        .run();
-    });
-
-    const apiKey = process.env.LIVEPEER_API_KEY;
-    if (!apiKey) {
-      console.error('Missing Livepeer API key');
-      return NextResponse.json({ error: 'Missing Livepeer API key' }, { status: 500 });
-    }
-
-    // Step 2: Create asset request on Livepeer
-    let assetResponse;
-    try {
-      assetResponse = await axios.post(
-        'https://livepeer.com/api/asset/request-upload',
-        { name: videoFileName },
-        {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        }
+      return NextResponse.json(
+        { error: "Missing sentiment text or project name" },
+        { status: 400 },
       );
-      console.log('Asset created successfully on Livepeer:', assetResponse.data);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // AxiosError type guard
-        console.error('Error creating asset on Livepeer:', error.response?.data || error.message);
-      } else {
-        // Fallback for non-Axios errors
-        console.error('Unknown error creating asset on Livepeer:', error);
-      }
-      return NextResponse.json({ error: 'Failed to create asset on Livepeer' }, { status: 500 });
     }
 
-    const uploadUrl = assetResponse.data.url;
-    console.log('Upload URL:', uploadUrl);
+    console.log(`Processing request for project: ${projectName}`);
 
-    if (!uploadUrl) {
-      console.error('Upload URL is missing or invalid');
-      return NextResponse.json({ error: 'Failed to get upload URL from Livepeer' }, { status: 500 });
-    }
+    // Generate image from sentiment text
+    const imageUrl = await generateImage(sentimentText);
+    console.log(`Image generated: ${imageUrl}`);
 
-    // Step 3: Upload the video file to Livepeer's direct URL
-    try {
-      const form = new FormData();
-      form.append('file', fs.createReadStream(videoPath));
+    // Generate video from the image
+    const videoUrl = await generateVideo(imageUrl);
+    console.log(`Video generated: ${videoUrl}`);
 
-      // Direct upload to Livepeer
-      const uploadResponse = await axios.post(uploadUrl, form, {
-        headers: {
-          ...form.getHeaders(), // Set correct multipart/form-data headers
-        },
-      });
-
-      console.log('Video uploaded successfully to Livepeer:', uploadResponse.data);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Error uploading video to Livepeer:', error.response?.data || error.message);
-      } else {
-        console.error('Unknown error uploading video to Livepeer:', error);
-      }
-      return NextResponse.json({ error: 'Failed to upload video to Livepeer' }, { status: 500 });
-    }
-
-    // Get the playback URL or ID
-    const playbackId = assetResponse.data.asset.playbackId;
-    const videoUrl = `https://livepeer.com/stream/${playbackId}/play.m3u8`;
-
-    // Clean up the local video file after successful upload
-    fs.unlink(videoPath, (err) => {
-      if (err) {
-        console.error('Failed to delete local video file:', err);
-      }
-    });
-
-    // Return the playback URL in the response
+    // Here you would add the code to upload to Livepeer
+    // For now, we'll just return the video URL
     return NextResponse.json({ videoUrl }, { status: 200 });
-
   } catch (error) {
-    console.error('Error during video generation or upload:', error);
-    return NextResponse.json({ error: 'Error generating or uploading video' }, { status: 500 });
+    console.error("Detailed error in POST handler:", error);
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    } else {
+      return NextResponse.json(
+        { error: "An unknown error occurred" },
+        { status: 500 },
+      );
+    }
   }
 }
