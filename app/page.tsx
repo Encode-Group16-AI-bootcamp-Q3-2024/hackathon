@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import { useChat } from "ai/react";
-import TokenInfoCard from "@/components/ui/tokenInfoCard"
-import TradingViewChart from "@/components/ui/TradingViewChart"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import ReactPlayer from 'react-player'
+import TokenInfoCard from "@/components/ui/tokenInfoCard";
+import TradingViewChart from "@/components/ui/TradingViewChart";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import ReactPlayer from "react-player";
 
 export default function CryptoSentimentAnalysis() {
-  const [projectName, setProjectName] = useState("")
+  const [projectName, setProjectName] = useState("");
   const [projectSymbol, setProjectSymbol] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const { messages, append, isLoading, setMessages } = useChat();
@@ -18,7 +18,13 @@ export default function CryptoSentimentAnalysis() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (projectName.trim() === "") {
-      setMessages([{ role: "assistant", content: "Please enter a valid project name.", id: "" }]);
+      setMessages([
+        {
+          role: "assistant",
+          content: "Please enter a valid project name.",
+          id: "",
+        },
+      ]);
       return;
     }
 
@@ -28,32 +34,46 @@ export default function CryptoSentimentAnalysis() {
     // Send the prompt to the AI
     await append({
       role: "user",
-      content: `Provide a 2-paragraph summary of the current market positioning of ${projectName} within the crypto landscape, including references to any relevant past events. Provide a detailed sentiment analysis for ${projectName}.`
+      content: `Provide a 2-paragraph summary of the current market positioning of ${projectName} within the crypto landscape, including references to any relevant past events. Provide a detailed sentiment analysis for ${projectName}.`,
     });
 
     // After the AI generates a response, we can capture the sentiment result
-    const analysisResult = messages.find(message => message.role === "assistant");
+    const analysisResult = messages.find(
+      (message) => message.role === "assistant",
+    );
 
     if (analysisResult) {
+      console.log(analysisResult);
       // Call the video generation function (backend API)
-      const response = await fetch('/api/generate-video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sentimentText: analysisResult.content, projectName })
+      const response = await fetch("/api/video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sentimentText: analysisResult.content,
+          projectName,
+        }),
       });
 
       const data = await response.json();
 
       if (data.videoUrl) {
         setVideoUrl(data.videoUrl);
-        setMessages(prevMessages => [
+        setMessages((prevMessages) => [
           ...prevMessages,
-          { role: "assistant", content: `Watch the analysis video here:`, id: "" }
+          {
+            role: "assistant",
+            content: `Watch the analysis video here:`,
+            id: "",
+          },
         ]);
       } else {
-        setMessages(prevMessages => [
+        setMessages((prevMessages) => [
           ...prevMessages,
-          { role: "assistant", content: "Error generating video. Please try again.", id: "" }
+          {
+            role: "assistant",
+            content: "Error generating video. Please try again.",
+            id: "",
+          },
         ]);
       }
     }
@@ -62,7 +82,9 @@ export default function CryptoSentimentAnalysis() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-600 to-blue-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full">
-        <h1 className="text-3xl font-bold text-center mb-6">Crypto Sentiment Analysis</h1>
+        <h1 className="text-3xl font-bold text-center mb-6">
+          Crypto Sentiment Analysis
+        </h1>
         <div className="flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-6">
           <div className="flex-1">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,12 +119,21 @@ export default function CryptoSentimentAnalysis() {
               </Button>
             </form>
             <div className="mt-6 space-y-4">
-              {messages.filter(message => message.role === 'assistant').map((message, index) => (
-                <div key={index} className={`p-4 rounded-md ${message.role === 'assistant' ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                  <p className="font-semibold">{message.role === 'user' ? 'Your Query:' : 'Analysis:'}</p>
-                  <div className="mt-2 whitespace-pre-wrap">{message.content}</div>
-                </div>
-              ))}
+              {messages
+                .filter((message) => message.role === "assistant")
+                .map((message, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-md ${message.role === "assistant" ? "bg-blue-100" : "bg-gray-100"}`}
+                  >
+                    <p className="font-semibold">
+                      {message.role === "user" ? "Your Query:" : "Analysis:"}
+                    </p>
+                    <div className="mt-2 whitespace-pre-wrap">
+                      {message.content}
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
           <div className="flex-1">
@@ -110,7 +141,9 @@ export default function CryptoSentimentAnalysis() {
             <TradingViewChart symbol={projectSymbol} />
             {videoUrl && (
               <div className="mt-6">
-                <h2 className="text-lg font-medium mb-2">Sentiment Analysis Video</h2>
+                <h2 className="text-lg font-medium mb-2">
+                  Sentiment Analysis Video
+                </h2>
                 <ReactPlayer url={videoUrl} controls />
               </div>
             )}
@@ -118,5 +151,5 @@ export default function CryptoSentimentAnalysis() {
         </div>
       </div>
     </div>
-  )
+  );
 }
