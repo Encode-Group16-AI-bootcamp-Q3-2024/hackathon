@@ -13,9 +13,22 @@ async function generateImage(sentimentText: string): Promise<string> {
 
     const response = await axios.post(`https://${GATEWAY_IP}/text-to-image`, {
       model_id: "SG161222/RealVisXL_V4.0_Lightning",
-      prompt: `take the final recomendation in ${sentimentText} and generate an image that represents it`,
+      prompt: `Create a visual-only infographic with these elements:
+        - Clean white background with professional blue and gray accents
+        - Top section: Business-related icons representing key concepts from "${sentimentText}"
+        - Middle section: Simple arrow flow or connection between icons showing progression
+        - Bottom section: A large, prominent gesture icon (thumbs up if positive sentiment, thumbs down if negative, or horizontal hand for neutral)
+        - Use simple, flat design icons in a consistent style
+        - The bottom gesture should be larger and highlighted with a colored circle background
+        - Include visual elements like arrows, charts, or graphs without any text
+        Style: minimal flat icons, material design style, clean vector graphics, corporate aesthetic, high contrast symbols`,
+      negative_prompt:
+        "text, words, letters, realistic hands, photographic elements, complex patterns, cluttered design, sketchy lines, low quality graphics",
       width: 1024,
       height: 1024,
+      sampler: "DPM++ 2M Karras",
+      steps: 30,
+      cfg_scale: 7.5,
     });
 
     console.log("Image generation response:", response.data);
@@ -78,16 +91,44 @@ export async function POST(req: NextRequest) {
     console.log(`Processing request for project: ${projectName}`);
 
     // Generate image from sentiment text
-    const imageUrl = await generateImage(sentimentText);
-    console.log(`Image generated: ${imageUrl}`);
+    let imageUrl: string | null = null;
+    let videoUrl: string | null = null;
 
-    // Generate video from the image
-    const videoUrl = await generateVideo(imageUrl);
-    console.log(`Video generated: ${videoUrl}`);
+    try {
+      imageUrl = await generateImage(sentimentText);
+      console.log(`Image generated: ${imageUrl}`);
+    } catch (error) {
+      console.error("Error generating image:", error);
+      return NextResponse.json(
+        { error: "Failed to generate image" },
+        { status: 500 },
+      );
+    }
 
-    // Here you would add the code to upload to Livepeer
-    // For now, we'll just return the video URL
-    return NextResponse.json({ videoUrl }, { status: 200 });
+    // Only try to generate video if we have an image
+    if (imageUrl) {
+      try {
+        videoUrl = await generateVideo(imageUrl);
+        console.log(`Video generated: ${videoUrl}`);
+      } catch (error) {
+        console.error("Error generating video:", error);
+        // Return just the image if video generation fails
+        return NextResponse.json(
+          {
+            imageUrl,
+            message:
+              "Video generation failed, but image was generated successfully",
+          },
+          { status: 206 }, // Partial Content
+        );
+      }
+    }
+
+    // Return both URLs if everything succeeded
+    return NextResponse.json(
+      { imageUrl, videoUrl },
+      { status: videoUrl ? 200 : 206 },
+    );
   } catch (error) {
     console.error("Detailed error in POST handler:", error);
     if (error instanceof Error) {

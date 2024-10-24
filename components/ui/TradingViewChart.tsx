@@ -36,9 +36,14 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ symbol }) => {
     };
     document.body.appendChild(script);
   }, [symbol]);
-  
-  return <div ref={containerRef} id="tradingview-container" style={{ height: "500px", width: "100%" }} />;
-  
+
+  return (
+    <div
+      ref={containerRef}
+      id="tradingview-container"
+      style={{ height: "500px", width: "100%" }}
+    />
+  );
 };
 
 export default TradingViewChart;
