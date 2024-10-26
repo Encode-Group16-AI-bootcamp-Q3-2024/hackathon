@@ -1,114 +1,167 @@
-# Crypto Sentiment Analysis with TradingView Chart
+# Crypto Vibe Check 🚀
 
-This project is a web application that provides sentiment analysis for cryptocurrency projects and includes a real-time TradingView chart. It uses OpenAI's GPT-4 model to analyze sentiment across various sources including social media, market data, and technical analysis.
+Real-time cryptocurrency sentiment analysis with AI-powered visual insights, powered by Livepeer's Dream Gateway.
 
-## Features
+![Crypto Vibe Check](https://img.shields.io/badge/Status-In%20Development-yellow)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Next.js](https://img.shields.io/badge/Next.js-13%2B-black)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-green)
+![Livepeer](https://img.shields.io/badge/Livepeer-Dream%20Gateway-purple)
 
-- Sentiment analysis for any cryptocurrency project (default: DOT/Polkadot)
-- Analysis across multiple sources: Twitter, Reddit, and Coinbase
-- Provides a sentiment breakdown, overall sentiment, and investment recommendation
-- Real-time streaming of AI-generated analysis
-- Interactive TradingView chart for visualizing cryptocurrency price data
+## Overview
 
-## Tech Stack
+Crypto Vibe Check is an innovative platform that provides comprehensive sentiment analysis for cryptocurrency projects, combining advanced AI analysis with dynamic visual representations. Our platform leverages Livepeer's Dream Gateway to transform sentiment data into engaging visuals and animations.
 
-- Frontend: Next.js with React
-- Backend: Next.js API Routes
-- AI: OpenAI GPT-4
-- Styling: Tailwind CSS
-- Charting: TradingView Widget API
+## ✨ Features
 
-## Prerequisites
+### 🤖 AI-Powered Sentiment Analysis
 
-Before you begin, ensure you have met the following requirements:
+- Real-time analysis using GPT-4
+- Multi-source data aggregation (Twitter, Reddit, Coinbase)
+- Detailed sentiment breakdowns and recommendations
 
-- Node.js (v14 or later)
-- npm or yarn
-- An OpenAI API key
+### 🎨 Dynamic Visual Generation via Livepeer
 
-## Installation
+- AI-generated infographics using Livepeer's Dream Gateway
+- Animated visualizations using Stable Video Diffusion
+- Professional, clean design aesthetic
+- Scalable media processing infrastructure
 
-1. Clone the repository:
+### ⚡ High-Performance Architecture
 
-  ```git clone https://github.com/Encode-Group16-AI-bootcamp-Q3-2024/finalProject-Group16
-   cd crypto-sentiment-analysis
-   ```
+- Edge computing for faster response times
+- Streaming responses for real-time updates
+- Graceful degradation for reliable service
 
-2.Install the dependencies:
+## 🛠️ Tech Stack
 
-   ```npm install
-   ```
+- **Frontend**: Next.js 13+, TypeScript
+- **AI Models**:
+  - OpenAI GPT-4
+  - Livepeer Dream Gateway
+    - RealVisXL V4.0 Lightning for images
+    - Stable Video Diffusion for animations
+- **Infrastructure**: Edge Runtime, Node.js
+- **APIs**: OpenAI, Livepeer Dream Gateway
 
-   or if you're using yarn:
+## 🚀 Getting Started
 
-   ```yarn install
-   ```
+### Prerequisites
 
-3.Create a `.env.local` file in the root directory and add your OpenAI API key:
-
-   ```OPENAI_API_KEY=your_api_key_here
-   ```
-
-## Running the Application
-
-1. Start the development server:
-
-   ```npm run dev
-   ```
-
-   or with yarn:
-
-   ```yarn dev
-   ```
-
-2. Open your browser and navigate to `http://localhost:3000`
-
-## Usage
-
-1. Enter the name of a cryptocurrency project in the input field (default is DOT for Polkadot).
-2. Click the "Analyze Sentiment" button.
-3. Wait for the AI to generate the sentiment analysis.
-4. Review the detailed breakdown of sentiment across different sources, overall sentiment, and investment recommendation.
-5. Interact with the TradingView chart to visualize price data for the selected cryptocurrency.
-
-## TradingView Chart Component
-
-The project includes a TradingView chart component (`TradingViewChart.tsx`) that provides real-time price data visualization for the selected cryptocurrency.
-
-Key features of the TradingView chart:
-
-- Automatically loads and displays chart for the selected cryptocurrency
-- Supports symbol changes, allowing users to view different cryptocurrencies
-- Includes various chart tools and indicators
-- Displays relevant news headlines
-
-To use the TradingView chart in your component:
-
-```jsx
-import TradingViewChart from './path/to/TradingViewChart';
-
-function YourComponent() {
-  return (
-    <div>
-      <TradingViewChart symbol="BTC" />
-    </div>
-  );
-}
+```bash
+Node.js 18+
+npm or yarn
+Livepeer Dream Gateway access
 ```
 
-Replace "BTC" with the symbol of the cryptocurrency you want to display.
+### Environment Variables
 
-## Contributing
+Create a `.env.local` file with:
 
-Contributions to the Crypto Sentiment Analysis project are welcome. Please feel free to submit a Pull Request.
+```env
+OPENAI_API_KEY=your_openai_key
+GATEWAY_IP=dream-gateway.livepeer.cloud
+```
 
-## License
+### Installation
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```bash
+# Clone the repository
+git clone https://github.com/your-username/crypto-vibe-check.git
 
-## Acknowledgements
+# Install dependencies
+cd crypto-vibe-check
+npm install
 
-- OpenAI for providing the GPT-4 model
-- TradingView for their charting widget
-- Vercel for Next.js and hosting solutions
-- The open-source community for various tools and libraries used in this project
+# Run development server
+npm run dev
+```
+
+## 📖 Usage
+
+1. Enter a cryptocurrency project name
+2. Receive comprehensive sentiment analysis
+3. View Livepeer-generated visual insights
+4. Get actionable recommendations
+
+## 🔌 API Endpoints
+
+### Sentiment Analysis
+
+```typescript
+POST /api/sentiment
+Body: { messages: Message[] }
+Response: StreamingTextResponse
+```
+
+### Visual Generation (Livepeer Dream Gateway)
+
+```typescript
+POST /api/media
+Body: { sentimentText: string, projectName: string }
+Response: { imageUrl: string, videoUrl: string }
+```
+
+## 🎥 Livepeer Integration
+
+Our project leverages Livepeer's Dream Gateway for:
+
+- Text-to-image generation using RealVisXL V4.0 Lightning
+- Image-to-video conversion using Stable Video Diffusion
+- Scalable media processing
+- Reliable content delivery
+
+### Example Usage
+
+```typescript
+const generateImage = async (prompt: string) => {
+  const response = await axios.post(`https://dream-gateway.livepeer.cloud/text-to-image`, {
+    model_id: "SG161222/RealVisXL_V4.0_Lightning",
+    prompt: prompt
+  });
+  return response.data.images[0].url;
+};
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## 🙏 Acknowledgments
+
+- OpenAI for GPT-4 API
+- Livepeer for Dream Gateway infrastructure
+- Stability AI for diffusion models
+- Group16 Productions team
+
+## 💡 Future Roadmap
+
+- [ ] Live streaming market analysis integration
+- [ ] Customizable visual alert systems
+- [ ] Portfolio tracking with automated reports
+- [ ] Mobile app development
+- [ ] Advanced technical analysis features
+
+## ⚠️ Known Issues
+
+Please check the [Issues](https://github.com/your-username/crypto-vibe-check/issues) page for current known issues and feature requests.
+
+## 📫 Support
+
+For support:
+
+- Create an issue in the repository
+- Email <support@group16productions.com>
+- Join our Discord community
+
+## 🌟 Show your support
+
+Give a ⭐️ if this project helped you!
