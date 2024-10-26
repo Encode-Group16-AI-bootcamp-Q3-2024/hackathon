@@ -159,8 +159,6 @@ Please check the [Issues](https://github.com/your-username/crypto-vibe-check/iss
 For support:
 
 - Create an issue in the repository
-- Email <support@group16productions.com>
-- Join our Discord community
 
 ## 🌟 Show your support
 
